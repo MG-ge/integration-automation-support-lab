@@ -1,5 +1,34 @@
 # Integration Automation Support Lab
 
+**What this proves.** `Idempotency-Key` handling on a webhook endpoint, duplicate-delivery detection, failed-job visibility via `/jobs?status=failed`, a manual retry endpoint, and a support runbook — the exact loop a Technical Customer Solutions / Integration Support role investigates daily.
+
+**30-second tour.**
+
+```bash
+git clone https://github.com/MG-ge/integration-automation-support-lab && cd integration-automation-support-lab
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt && pytest
+PORT=8040 scripts/run-dev.sh
+
+# in another terminal — first delivery:
+curl -s -X POST http://127.0.0.1:8040/webhooks/order \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: order-1001-created" \
+  -d '{"external_order_id":"order-1001","customer_email":"x@example.com","amount_cents":1990}'
+# {"status":"created", ...}
+
+# replay with the same Idempotency-Key:
+curl -s -X POST http://127.0.0.1:8040/webhooks/order \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: order-1001-created" \
+  -d '{"external_order_id":"order-1001","customer_email":"x@example.com","amount_cents":1990}'
+# {"status":"duplicate", ...}  no second job is created.
+```
+
+**Status:** v1 complete · `pytest` green · local SQLite-backed lab, no real payment/logistics integration.
+
+---
+
 Project 4 in the career lab.
 
 This is a local portfolio lab for junior integration support, SaaS technical support, application support, API support, technical customer solutions, and junior implementation-adjacent roles.
